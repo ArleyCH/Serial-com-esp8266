@@ -78,7 +78,8 @@ __heap_limit
 ; External declaration for the interrupt handler used by the application.
 ;
 ;******************************************************************************
-        EXTERN  UARTIntHandler
+        EXTERN  UART0IntHandler
+	    EXTERN  UART4IntHandler
 
 ;******************************************************************************
 ;
@@ -108,7 +109,7 @@ __Vectors
         DCD     IntDefaultHandler           ; GPIO Port C
         DCD     IntDefaultHandler           ; GPIO Port D
         DCD     IntDefaultHandler           ; GPIO Port E
-        DCD     UARTIntHandler              ; UART0 Rx and Tx
+        DCD     UART0IntHandler             ; UART0 Rx and Tx
         DCD     IntDefaultHandler           ; UART1 Rx and Tx
         DCD     IntDefaultHandler           ; SSI0 Rx and Tx
         DCD     IntDefaultHandler           ; I2C0 Master and Slave
@@ -163,7 +164,7 @@ __Vectors
         DCD     IntDefaultHandler           ; SSI2 Rx and Tx
         DCD     IntDefaultHandler           ; SSI3 Rx and Tx
         DCD     IntDefaultHandler           ; UART3 Rx and Tx
-        DCD     IntDefaultHandler           ; UART4 Rx and Tx
+        DCD     UART4IntHandler             ; UART4 Rx and Tx
         DCD     IntDefaultHandler           ; UART5 Rx and Tx
         DCD     IntDefaultHandler           ; UART6 Rx and Tx
         DCD     IntDefaultHandler           ; UART7 Rx and Tx

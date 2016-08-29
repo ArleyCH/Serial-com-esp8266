@@ -62,11 +62,11 @@ __error__(char *pcFilename, uint32_t ui32Line)
 
 //*****************************************************************************
 //
-// The UART interrupt handler.
+// The UART 0 interrupt handler.
 //
 //*****************************************************************************
 void
-UARTIntHandler(void)
+UART0IntHandler(void)
 {
     uint32_t ui32Status;
 
@@ -87,12 +87,13 @@ UARTIntHandler(void)
     {
         //
         // Read the next character from the UART and write it back to the UART.
+			  // Send character from UART0 (PC) to UART4 (ESP8266)
         //
-        ROM_UARTCharPutNonBlocking(UART0_BASE,
+        ROM_UARTCharPutNonBlocking(UART4_BASE,
                                    ROM_UARTCharGetNonBlocking(UART0_BASE));
 
-        //
-        // Blink the LED to show a character transfer is occuring.
+        
+        // Blink the LED to show a character transfer is occuring.1-Port base 2- bit representation o pins 3- Value to write
         //
         GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, GPIO_PIN_2);
 
@@ -108,7 +109,40 @@ UARTIntHandler(void)
 
     }
 }
+//*****************************************************************************
+//
+// The UART 4 interrupt handler.
+//
+//*****************************************************************************
+void
+UART4IntHandler(void){
+    uint32_t ui32Status;
 
+    //
+    // Get the interrrupt status. 1-Sends the UART base 2- The actual UART actions that trigger the interrupt.
+    //
+    ui32Status = ROM_UARTIntStatus(UART4_BASE, true);
+
+    //
+    // Clear the asserted interrupts. 1-Sends the UART base 2- Sends the interruption status.
+    //
+    ROM_UARTIntClear(UART4_BASE, ui32Status);
+
+    //
+    // Loop while there are characters in the receive FIFO. 
+    //
+    while(ROM_UARTCharsAvail(UART4_BASE))
+    {
+        //
+        // Read the next character from the UART and write it back to the UART.
+			  // Gets the character from UART4 (ESP8266)
+        //
+        ROM_UARTCharPutNonBlocking(UART0_BASE,
+                                   ROM_UARTCharGetNonBlocking(UART4_BASE));
+
+    }	
+	
+}
 //*****************************************************************************
 //
 // Send a string to the UART.
@@ -173,29 +207,44 @@ main(void)
     ROM_IntMasterEnable();
 
     //
-    // Set GPIO A0 and A1 as UART pins.
+    // Set GPIO A0 and A1 as UART pins.(UART0)
     //
     GPIOPinConfigure(GPIO_PA0_U0RX);
     GPIOPinConfigure(GPIO_PA1_U0TX);
     ROM_GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
 
     //
-    // Configure the UART for 115,200, 8-N-1 operation.
+    // Set GPIO C4 and C5 as UART pins.(UART4)
+    //
+    GPIOPinConfigure(GPIO_PC4_U4RX);
+    GPIOPinConfigure(GPIO_PC5_U4TX);
+    ROM_GPIOPinTypeUART(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5);
+    //
+    // Configure the UART0 for 115,200, 8-N-1 operation.
     //
     ROM_UARTConfigSetExpClk(UART0_BASE, ROM_SysCtlClockGet(), 115200,
                             (UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE |
                              UART_CONFIG_PAR_NONE));
-
     //
-    // Enable the UART interrupt.
+    // Configure the UART4 for 115,200, 8-N-1 operation.
+    //										 
+    ROM_UARTConfigSetExpClk(UART4_BASE, ROM_SysCtlClockGet(), 115200,
+                            (UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE |
+                             UART_CONFIG_PAR_NONE));
+    //
+    // Enable the UART0 interrupt.
     //
     ROM_IntEnable(INT_UART0);
     ROM_UARTIntEnable(UART0_BASE, UART_INT_RX | UART_INT_RT);
-
+    //
+    // Enable the UART4 interrupt.
+    //
+    ROM_IntEnable(INT_UART4);
+    ROM_UARTIntEnable(UART4_BASE, UART_INT_RX | UART_INT_RT);
     //
     // Prompt for text to be entered.
     //
-    UARTSend((uint8_t *)"\033[2JEnter text: ", 16);
+    //UARTSend((uint8_t *)"\033[2JEnter text: ", 16);
 
     //
     // Loop forever echoing data through the UART.
